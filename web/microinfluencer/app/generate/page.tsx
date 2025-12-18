@@ -11,6 +11,7 @@ interface Message {
   role: 'user' | 'assistant';
   content: string;
   id: string;
+  imageUrl?: string;
 }
 
 export default function GeneratePage() {
@@ -71,25 +72,14 @@ export default function GeneratePage() {
 
       if (!response.ok) throw new Error('Failed to get response');
 
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
+      const data = await response.json();
       
-      let fullText = '';
-      setMessages((prev) => [...prev, { role: 'assistant', content: '', id: (Date.now() + 1).toString() }]);
-
-      while (true) {
-        const { done, value } = await reader!.read();
-        if (done) break;
-
-        const chunk = decoder.decode(value);
-        fullText += chunk;
-        
-        setMessages((prev) => {
-          const newMessages = [...prev];
-          newMessages[newMessages.length - 1].content = fullText;
-          return newMessages;
-        });
-      }
+      setMessages((prev) => [...prev, {
+        role: 'assistant',
+        content: data.text,
+        id: (Date.now() + 1).toString(),
+        imageUrl: data.imageUrl, // Include image URL if present
+      }]);
     } catch (error) {
       console.error('Error:', error);
       setMessages((prev) => [...prev, {
@@ -199,6 +189,18 @@ export default function GeneratePage() {
                         : 'bg-white text-zinc-900 shadow-md dark:bg-zinc-800 dark:text-zinc-100'
                     }`}
                   >
+                    {message.imageUrl && message.imageUrl.trim().startsWith('http') && (
+                      <div className="mb-3">
+                        <Image
+                          src={message.imageUrl.trim()}
+                          alt="Generated"
+                          width={500}
+                          height={500}
+                          className="rounded-lg"
+                          unoptimized
+                        />
+                      </div>
+                    )}
                     <div className="whitespace-pre-wrap text-sm">{message.content}</div>
                   </div>
                 </div>
