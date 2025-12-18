@@ -1,36 +1,189 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🎯 MicroInfluence - AI Micro Influencer Marketplace
 
-## Getting Started
+AI-powered marketplace connecting agencies with micro influencers through automated content generation.
 
-First, run the development server:
+## 🚀 Quick Start
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Visit: **http://localhost:3000**
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 💡 The Idea
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+**Problem**: Influencer marketing is slow, expensive, manual content creation.
 
-## Learn More
+**Solution**: AI generates promotional content featuring influencers with products.
 
-To learn more about Next.js, take a look at the following resources:
+### Influencer Path
+1. Upload photo
+2. Select products from e-commerce catalog
+3. AI generates realistic promo images (OpenRouter + Gemini Nano Banana)
+4. AI writes captions with affiliate links
+5. Share & earn commissions
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Agency Path
+1. Create campaigns with budget
+2. Add products to promote
+3. Invite influencers
+4. Track performance & ROI
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## ✨ Current Features
 
-## Deploy on Vercel
+- ✅ Google Authentication (Firebase)
+- ✅ User profiles (Influencer/Agency)
+- ✅ Content generator UI (`/generate`)
+- ✅ Analytics dashboard (`/analytics`)
+- ✅ Affiliate link tracking (`/a/{linkId}`)
+- ✅ Click tracking (IP, location, datetime → Firestore)
+- ✅ Agency analytics with influencer filters
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🔧 Setup
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### 1. Environment Variables
+
+Create `.env.local`:
+
+```bash
+NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyCu4FBtFOtMSmwoJZfsDatssArxqXAF7Uc
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=microinfluencers-1ba2b.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=microinfluencers-1ba2b
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=microinfluencers-1ba2b.firebasestorage.app
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=745075291860
+NEXT_PUBLIC_FIREBASE_APP_ID=1:745075291860:web:1754f957bb6f8b1230ed41
+
+# OpenRouter API Key (for AI chat & image generation)
+OPENROUTER_API_KEY=your-openrouter-api-key
+```
+
+### 2. Firestore Security Rules
+
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth.uid == userId;
+    }
+    match /clicks/{clickId} {
+      allow read: if request.auth != null;
+      allow create: if true; // Anonymous tracking
+    }
+    match /content/{contentId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && resource.data.influencerId == request.auth.uid;
+    }
+    match /affiliateLinks/{linkId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+  }
+}
+```
+
+### 3. Storage Rules
+
+```
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /influencer-photos/{userId}/{fileName} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+    match /generated-content/{contentId}/{fileName} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+  }
+}
+```
+
+## 📁 Structure
+
+```
+app/
+├── page.tsx              # Landing page
+├── profile/              # User dashboard
+├── generate/             # AI content generator (influencers)
+├── analytics/            # Performance tracking (both)
+├── a/[linkId]/           # Affiliate redirect tracker
+└── api/                  # Backend routes (Firebase Admin SDK)
+    ├── generate-image/   # Image generation
+    └── generate-caption/ # Caption generation
+
+lib/
+└── firebase.ts           # Client SDK only
+
+contexts/
+└── AuthContext.tsx       # Auth state
+
+microinfluencers-firestore.json  # Admin SDK (never on client!)
+```
+
+## 🗄️ Firestore Collections
+
+- **`users`** - User profiles
+- **`affiliateLinks`** - Tracking links
+- **`clicks`** - Click data (IP, location, datetime)
+- **`content`** - Generated content
+- **`campaigns`** - Agency campaigns
+- **`products`** - Product catalog
+- **`conversions`** - Sales tracking
+
+## 🔒 Architecture Rules
+
+✅ **Client Side** (Browser):
+- Firebase Auth (client SDK)
+- Firestore queries (client SDK)
+- Storage uploads (client SDK)
+
+✅ **Server Side** (API Routes):
+- Firebase Admin SDK
+- OpenRouter AI calls
+- Sensitive operations
+
+❌ **Never on Client**:
+- `microinfluencers-firestore.json`
+- Firebase Admin SDK
+- Private keys
+
+## 🚀 Roadmap
+
+- [x] Phase 1: Auth & Foundation
+- [x] Phase 2: Analytics & Tracking
+- [ ] Phase 3: AI Integration (OpenRouter)
+- [ ] Phase 4: Product Catalog
+- [ ] Phase 5: Campaign Management
+- [ ] Phase 6: Payment Processing
+
+## 🧪 Test Flow
+
+1. Sign in as Influencer
+2. Go to `/generate`
+3. Upload photo
+4. Click "Generate Content"
+5. Visit `/analytics` to see performance
+6. Click affiliate link (`/a/test123`) to test tracking
+
+## 🛠️ Tech Stack
+
+- Next.js 16, React 19, TypeScript 5
+- Firebase Auth, Firestore, Storage
+- Tailwind CSS 4
+- OpenRouter (coming) + Gemini Nano Banana
+
+## 📝 Notes
+
+- COOP warnings in console are harmless
+- Currently using mock data for analytics
+- AI integration ready for Phase 3
+- Storage bucket: `gs://microinfluencers-1ba2b.firebasestorage.app`
+
+---
+
+**Status**: Phase 2 Complete ✅  
+**Next**: AI Integration with OpenRouter
