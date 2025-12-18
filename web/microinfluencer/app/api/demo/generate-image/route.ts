@@ -4,14 +4,19 @@ if (!OPENROUTER_API_KEY) throw new Error('OPENROUTER_API_KEY is not set');
 
 export async function POST(req: Request) {
   try {
-    const { productName, productImageUrl, influencerImage } = await req.json();
+    const { productName, productImageUrl, influencerImage, customInstructions } = await req.json();
     
     console.log(`[DEMO] Generating image for: ${productName}`);
     console.log(`[DEMO] Product image: ${productImageUrl}`);
     console.log(`[DEMO] Has influencer image: ${!!influencerImage}`);
+    console.log(`[DEMO] Custom instructions: ${customInstructions || 'none'}`);
 
-    // Prompt asking to combine the person with the product
-    const prompt = `Generate a promotional lifestyle image: Take the person from the first image and show them naturally using or holding the product from the second image (${productName}). Make it look like a professional Instagram promotional photo.`;
+    // Build prompt with optional custom instructions
+    let prompt = `Generate a promotional lifestyle image: Take the person from the first image and show them naturally using or holding the product from the second image (${productName}). Make it look like a professional Instagram promotional photo.`;
+    
+    if (customInstructions && customInstructions.trim()) {
+      prompt += ` Additional instructions: ${customInstructions.trim()}`;
+    }
 
     console.log(`[DEMO] Prompt: "${prompt}"`);
     console.log(`[DEMO] Sending influencer image + product image`);

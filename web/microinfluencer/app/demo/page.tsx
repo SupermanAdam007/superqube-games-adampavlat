@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Upload, X } from 'lucide-react';
 
 interface Product {
   name: string;
@@ -11,15 +11,18 @@ interface Product {
   price: number;
   category: string;
   image: string;
+  url: string;
 }
 
 export default function DemoPage() {
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [searchQuery, setSearchQuery] = useState('skincare products');
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [generatedPost, setGeneratedPost] = useState<string | null>(null);
   const [influencerImage, setInfluencerImage] = useState<string | null>(null);
+  const [imageInstructions, setImageInstructions] = useState('');
   const [searchLoading, setSearchLoading] = useState(false);
   const [imageLoading, setImageLoading] = useState(false);
   const [postLoading, setPostLoading] = useState(false);
@@ -82,6 +85,7 @@ export default function DemoPage() {
           productName: selectedProduct.name,
           productImageUrl: selectedProduct.image,
           influencerImage,
+          customInstructions: imageInstructions,
         }),
       });
       
@@ -114,7 +118,7 @@ export default function DemoPage() {
           productName: selectedProduct.name,
           productBrand: selectedProduct.brand,
           productPrice: selectedProduct.price,
-          productUrl: `https://example.com/product/${encodeURIComponent(selectedProduct.name)}`, // Affiliate link
+          productUrl: selectedProduct.url, // Real product URL from scraped data
         }),
       });
 
@@ -145,21 +149,44 @@ export default function DemoPage() {
         {/* Step 1: Upload Photo */}
         <div className="mb-8 rounded-lg bg-white p-6 shadow-md">
           <h2 className="mb-4 text-2xl font-semibold">Step 1: Upload Your Photo</h2>
+          
           <input
+            ref={fileInputRef}
             type="file"
             accept="image/*"
             onChange={handleImageUpload}
-            className="mb-4"
+            className="hidden"
           />
-          {influencerImage && (
-            <div className="mt-4">
+          
+          {!influencerImage ? (
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              className="cursor-pointer rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 p-8 text-center transition-colors hover:border-blue-400 hover:bg-blue-50"
+            >
+              <Upload className="mx-auto mb-3 h-10 w-10 text-gray-400" />
+              <p className="mb-1 text-sm font-medium text-gray-700">
+                Click to upload your photo
+              </p>
+              <p className="text-xs text-gray-500">
+                PNG, JPG or WEBP (max 10MB)
+              </p>
+            </div>
+          ) : (
+            <div className="relative inline-block">
               <Image
                 src={influencerImage}
                 alt="Your photo"
                 width={200}
                 height={200}
-                className="rounded-lg"
+                className="rounded-xl border-2 border-green-400 object-cover"
               />
+              <button
+                onClick={() => setInfluencerImage(null)}
+                className="absolute -right-2 -top-2 rounded-full bg-red-500 p-1.5 text-white shadow-md transition-colors hover:bg-red-600"
+              >
+                <X className="h-4 w-4" />
+              </button>
+              <p className="mt-2 text-sm text-green-600">✓ Photo uploaded</p>
             </div>
           )}
         </div>
@@ -219,6 +246,20 @@ export default function DemoPage() {
         {/* Step 3: Generate Image */}
         <div className="mb-8 rounded-lg bg-white p-6 shadow-md">
           <h2 className="mb-4 text-2xl font-semibold">Step 3: Generate Image (Nano Banana)</h2>
+          
+          <div className="mb-4">
+            <label className="mb-2 block text-sm font-medium text-gray-700">
+              Custom Instructions (optional):
+            </label>
+            <textarea
+              value={imageInstructions}
+              onChange={(e) => setImageInstructions(e.target.value)}
+              placeholder="e.g., 'in a modern bathroom', 'outdoor setting', 'holding the product close to face'..."
+              className="w-full rounded-lg border px-4 py-2 text-sm"
+              rows={2}
+            />
+          </div>
+          
           <Button onClick={generateImage} disabled={imageLoading || !selectedProduct || !influencerImage}>
             {imageLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             Generate Promotional Image

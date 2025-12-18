@@ -43,6 +43,7 @@ export async function POST(req: Request) {
       price: m.metadata?.originalPrice || m.metadata?.price,
       category: m.metadata?.category,
       image: m.metadata?.image,
+      url: m.metadata?.url, // Include the actual product URL
     }));
 
     console.log(`[DEMO] Found ${products.length} products`);

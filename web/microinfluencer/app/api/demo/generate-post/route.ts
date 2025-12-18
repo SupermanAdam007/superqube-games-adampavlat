@@ -10,26 +10,33 @@ export async function POST(req: Request) {
     const { productName, productBrand, productPrice, productUrl } = await req.json();
 
     console.log(`[DEMO] Generating post for: ${productName}`);
+    console.log(`[DEMO] Product URL: ${productUrl}`);
+    
+    // Ensure we have a valid URL
+    const finalUrl = productUrl && productUrl !== 'undefined' 
+      ? productUrl 
+      : `https://www.slevomat.cz/hledani?keyword=${encodeURIComponent(productName)}`
 
     const result = await generateText({
       model: openrouter('anthropic/claude-3.5-sonnet'),
-      prompt: `You are a social media expert for micro-influencers. Generate an engaging Instagram/TikTok post for promoting this product:
+      prompt: `Jsi expert na sociální sítě pro micro-influencery. Vygeneruj krátký Instagram/TikTok příspěvek pro propagaci tohoto produktu:
 
-Product: ${productName}
-Brand: ${productBrand}
-Price: ${productPrice} CZK
-Affiliate Link: ${productUrl}
+Produkt: ${productName}
+Značka: ${productBrand}
+Cena: ${productPrice} CZK
+Odkaz: ${finalUrl}
 
-Requirements:
-- Write in a casual, authentic influencer voice
-- Include 3-5 relevant hashtags
-- Include a call-to-action with the affiliate link
-- Keep it under 200 words
-- Make it feel personal and genuine, not salesy
-- Add relevant emojis
+Požadavky:
+- Piš ČESKY
+- Maximálně 2-3 věty
+- Přidej 3-4 relevantní hashtagy
+- MUSÍ obsahovat PŘESNĚ tento odkaz (zkopíruj ho): ${finalUrl}
+- Přidej vhodné emoji
+- Buď autentický a přirozený
+- NEVYMÝŠLEJ si jiný odkaz, použij PŘESNĚ ten výše
 
-Generate only the post content, nothing else.`,
-      maxTokens: 500,
+Vygeneruj pouze text příspěvku, nic jiného.`,
+      maxTokens: 300,
     });
 
     console.log(`[DEMO] Post generated successfully`);
