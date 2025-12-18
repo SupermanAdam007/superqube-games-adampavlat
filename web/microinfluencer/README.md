@@ -5,7 +5,19 @@ AI-powered marketplace connecting agencies with micro influencers through automa
 ## 🚀 Quick Start
 
 ```bash
+# Install dependencies
 npm install
+
+# Set up Pinecone (one-time):
+# 1. Go to https://app.pinecone.io/
+# 2. Create index: microinfluencer-products
+# 3. Dimension: 1536, Metric: cosine
+# 4. Add PINECONE_API_KEY to .env.local
+
+# Embed product data
+npx tsx scripts/embed-products.ts
+
+# Run dev server
 npm run dev
 ```
 
@@ -32,13 +44,14 @@ Visit: **http://localhost:3000**
 
 ## ✨ Current Features
 
-- ✅ Google Authentication (Firebase)
-- ✅ User profiles (Influencer/Agency)
-- ✅ Content generator UI (`/generate`)
-- ✅ Analytics dashboard (`/analytics`)
-- ✅ Affiliate link tracking (`/a/{linkId}`)
-- ✅ Click tracking (IP, location, datetime → Firestore)
-- ✅ Agency analytics with influencer filters
+- ✅ **Unified AI Agent** - One interface for everything
+- ✅ **Product Search** - RAG-powered search via Pinecone
+- ✅ **Image Generation** - Nano Banana creates product + influencer photos
+- ✅ **Smart Tools** - AI decides when to search or generate images
+- ✅ **Influencer Photo Upload** - Combines your photo with products
+- ✅ **Google Authentication** (Firebase)
+- ✅ **Content Creation** - Captions, hashtags, strategy advice
+- ✅ **Analytics & Tracking** - Click tracking with Firestore
 
 ## 🔧 Setup
 
@@ -56,6 +69,12 @@ NEXT_PUBLIC_FIREBASE_APP_ID=1:745075291860:web:1754f957bb6f8b1230ed41
 
 # OpenRouter API Key (for AI chat & image generation)
 OPENROUTER_API_KEY=your-openrouter-api-key
+
+# Pinecone API Key (for product search RAG)
+PINECONE_API_KEY=your-pinecone-api-key
+
+# OpenAI API Key (for embeddings)
+OPENAI_API_KEY=your-openai-api-key
 ```
 
 ### 2. Firestore Security Rules

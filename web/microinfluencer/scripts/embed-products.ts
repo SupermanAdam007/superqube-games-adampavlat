@@ -2,15 +2,20 @@ import { Pinecone } from '@pinecone-database/pinecone';
 import OpenAI from 'openai';
 import fs from 'fs';
 import path from 'path';
+import { config } from 'dotenv';
+
+// Load environment variables from .env.local
+config({ path: path.join(__dirname, '../.env.local') });
 
 // Initialize Pinecone
 const pinecone = new Pinecone({
   apiKey: process.env.PINECONE_API_KEY!,
 });
 
-// Initialize OpenAI for embeddings
+// Initialize OpenAI for embeddings via OpenRouter
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENROUTER_API_KEY,
+  baseURL: 'https://openrouter.ai/api/v1',
 });
 
 interface Product {
@@ -32,7 +37,7 @@ interface Product {
 
 async function generateEmbedding(text: string): Promise<number[]> {
   const response = await openai.embeddings.create({
-    model: 'text-embedding-3-small',
+    model: 'openai/text-embedding-3-small',
     input: text,
   });
   return response.data[0].embedding;
@@ -78,6 +83,7 @@ async function embedProducts() {
 
     for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
       const batch = batches[batchIndex];
+      const batchStartIndex = batchIndex * batchSize;
       console.log(`Processing batch ${batchIndex + 1}/${batches.length}...`);
 
       const vectors = await Promise.all(
@@ -86,18 +92,18 @@ async function embedProducts() {
           const embedding = await generateEmbedding(text);
           
           return {
-            id: `product-${i + idx}`,
+            id: `product-${batchStartIndex + idx}`,
             values: embedding,
             metadata: {
-              name: product.name,
-              brand: product.brand,
-              category: product.item_category2,
-              price: product.price,
-              originalPrice: product.originalPrice,
+              name: product.name || '',
+              brand: product.brand || '',
+              category: product.item_category2 || '',
+              price: product.price || 0,
+              originalPrice: product.originalPrice || 0,
               rating: product.rating || 0,
               ratingCount: product.ratingCount || 0,
-              url: product.url,
-              image: product.image,
+              url: product.url || '',
+              image: product.image || '',
               text: text,
             },
           };
